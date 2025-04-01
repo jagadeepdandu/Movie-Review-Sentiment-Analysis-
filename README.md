@@ -16,6 +16,7 @@ Sentiment scale from Very Negative to Very Positive
 
 Example reviews for quick testing
 
+Mobile-friendly responsive design
 
 Tech Stack
 
@@ -54,6 +55,9 @@ Installation
 Clone the repository:
 
 git clone https://github.com/jagadeepdandu/movie-review-.git
+
+Change into the project directory:
+
 cd movie-review-
 
 Install dependencies:
@@ -84,7 +88,17 @@ Performance: ~95% accuracy on the test set
 
 Model Size: 225 MB
 
+Deployment
 
+This application can be deployed to cloud platforms such as:
+
+Render
+
+Heroku
+
+AWS
+
+Google Cloud
 
 Follow the platform-specific instructions for deploying a Flask application.
 
