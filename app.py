@@ -5,45 +5,24 @@ import os
 
 app = Flask(__name__)
 
-# Load the tokenizer and model
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased')
-
-# Load your trained weights with robust error handling
-MODEL_PATH = "distilbert_imdb.pth"  
+# Initialize model info
+MODEL_ID = "jagadeepdandu/distilbert-imdb-sentiment"
 model_loaded = False
 
+# Load the tokenizer and model from Hugging Face directly
 try:
-    # Print current directory and check if file exists
-    print(f"Current directory: {os.getcwd()}")
-    print(f"Model file exists: {os.path.exists(MODEL_PATH)}")
-    
-    # Try different loading approaches
-    if os.path.exists(MODEL_PATH):
-        try:
-            # Standard approach
-            model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
-            model_loaded = True
-            print("Model loaded successfully!")
-        except Exception as e1:
-            print(f"Standard loading failed: {e1}")
-            try:
-                
-                full_model = torch.load(MODEL_PATH, map_location=torch.device('cpu'))
-                if isinstance(full_model, dict) and "state_dict" in full_model:
-                    model.load_state_dict(full_model["state_dict"])
-                else:
-                    model = full_model
-                model_loaded = True
-                print("Model loaded with alternative method!")
-            except Exception as e2:
-                print(f"Alternative loading failed: {e2}")
-    else:
-        print(f"Model file not found at {MODEL_PATH}")
+    print(f"Loading model from Hugging Face: {MODEL_ID}")
+    tokenizer = DistilBertTokenizer.from_pretrained(MODEL_ID)
+    model = DistilBertForSequenceClassification.from_pretrained(MODEL_ID)
+    model.eval()
+    model_loaded = True
+    print("Model loaded successfully from Hugging Face!")
 except Exception as e:
-    print(f"Error during model loading: {e}")
-
-model.eval()
+    print(f"Error loading model from Hugging Face: {e}")
+    # Fallback to base model
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased')
+    print("Loaded base model as fallback")
 
 @app.route('/')
 def home():
@@ -55,9 +34,9 @@ def predict():
     review = data.get('review', '')
     
     # Define words to highlight
-    positive_words = ['good', 'great', 'excellent', 'amazing', 'love', 'brilliant', 'enjoyed', 
+    positive_words = ['good', 'great', 'excellent', 'amazing', 'love', 'brilliant', 'enjoyed',
                      'best', 'happy', 'wonderful', 'beautiful', 'fantastic', 'perfect', 'impressive']
-    negative_words = ['bad', 'terrible', 'awful', 'disappointing', 'hate', 'waste', 'boring', 
+    negative_words = ['bad', 'terrible', 'awful', 'disappointing', 'hate', 'waste', 'boring',
                      'worst', 'poor', 'horrible', 'stupid', 'ridiculous', 'annoying', 'pathetic']
     
     # Tokenize and make prediction
@@ -79,7 +58,7 @@ def predict():
             word_class = "positive-word"
         elif clean_word in negative_words:
             word_class = "negative-word"
-            
+        
         if word_class:
             highlighted_review += f'<span class="{word_class}">{word}</span> '
         else:
@@ -94,4 +73,6 @@ def predict():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    # Use PORT environment variable for compatibility with Render
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
