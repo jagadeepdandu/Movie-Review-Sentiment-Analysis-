@@ -2,27 +2,49 @@ from flask import Flask, request, jsonify, render_template
 import torch
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 import os
+import gc  # Garbage collector
 
 app = Flask(__name__)
 
-# Initialize model info
-MODEL_ID = "jagadeepdandu/distilbert-imdb-sentiment"
+# Initialize with None to load on first request
+tokenizer = None
+model = None
 model_loaded = False
 
-# Load the tokenizer and model from Hugging Face directly
-try:
-    print(f"Loading model from Hugging Face: {MODEL_ID}")
-    tokenizer = DistilBertTokenizer.from_pretrained(MODEL_ID)
-    model = DistilBertForSequenceClassification.from_pretrained(MODEL_ID)
-    model.eval()
-    model_loaded = True
-    print("Model loaded successfully from Hugging Face!")
-except Exception as e:
-    print(f"Error loading model from Hugging Face: {e}")
-    # Fallback to base model
-    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased')
-    print("Loaded base model as fallback")
+def load_model():
+    global tokenizer, model, model_loaded
+    
+    # Only load if not already loaded
+    if not model_loaded:
+        try:
+            print("Loading model from Hugging Face")
+            # Load with CPU-only settings
+            tokenizer = DistilBertTokenizer.from_pretrained(
+                "jagadeepdandu/distilbert-imdb-sentiment",
+                local_files_only=False
+            )
+            
+            # Use CPU-only configuration with minimal memory
+            model = DistilBertForSequenceClassification.from_pretrained(
+                "jagadeepdandu/distilbert-imdb-sentiment",
+                local_files_only=False,
+                torchscript=True,  # Optimize with TorchScript
+                low_cpu_mem_usage=True  # Use lower memory
+            )
+            
+            model.eval()  # Set to evaluation mode
+            model_loaded = True
+            print("Model loaded successfully!")
+            
+            # Force garbage collection
+            gc.collect()
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
+            
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            return False
+    
+    return True
 
 @app.route('/')
 def home():
@@ -30,6 +52,13 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    # Load model on first prediction
+    if not load_model():
+        return jsonify({
+            'error': 'Failed to load model',
+            'modelLoaded': model_loaded
+        }), 500
+    
     data = request.json
     review = data.get('review', '')
     
@@ -39,8 +68,8 @@ def predict():
     negative_words = ['bad', 'terrible', 'awful', 'disappointing', 'hate', 'waste', 'boring',
                      'worst', 'poor', 'horrible', 'stupid', 'ridiculous', 'annoying', 'pathetic']
     
-    # Tokenize and make prediction
-    inputs = tokenizer(review, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    # Tokenize with max length reduced to save memory
+    inputs = tokenizer(review, return_tensors="pt", truncation=True, padding=True, max_length=256)
     
     with torch.no_grad():
         outputs = model(**inputs)
@@ -63,6 +92,9 @@ def predict():
             highlighted_review += f'<span class="{word_class}">{word}</span> '
         else:
             highlighted_review += word + " "
+    
+    # Clear memory after prediction
+    gc.collect()
     
     return jsonify({
         'review': review,
