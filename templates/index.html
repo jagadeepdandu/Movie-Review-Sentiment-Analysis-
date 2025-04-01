@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Review Sentiment Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Movie Review Sentiment Analysis</h1>
+            <p>Analyze movie reviews to determine if they're positive or negative</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <textarea id="review" placeholder="Enter your movie review here..."></textarea>
+                <button id="analyze-btn" class="btn">Analyze Sentiment</button>
+                
+                <div class="examples">
+                    <h3>Try with examples:</h3>
+                    <button id="positive-example" class="example-btn">Positive Example</button>
+                    <button id="negative-example" class="example-btn">Negative Example</button>
+                </div>
+            </div>
+            
+            <div id="result">
+                <div class="result-header">Analysis Result</div>
+                <div id="review-text" class="highlighted-text"></div>
+                
+                <div class="word-impact-legend">
+                    <div class="legend-item">
+                        <span class="legend-color legend-positive"></span> Positive Impact
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color legend-negative"></span> Negative Impact
+                    </div>
+                </div>
+                
+                <div id="sentiment-text" class="sentiment"></div>
+                
+                <div class="sentiment-scale">
+                    <div class="sentiment-marker" id="sentiment-marker"></div>
+                    <div class="scale-labels">
+                        <span>Very Negative</span>
+                        <span>Negative</span>
+                        <span>Neutral</span>
+                        <span>Positive</span>
+                        <span>Very Positive</span>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="confidence-bar"></div>
+                </div>
+                <div id="confidence-text"></div>
+                
+                <div class="export-options">
+                    <button class="export-btn" id="export-image">
+                        <span class="export-icon">📷</span> Save as Image
+                    </button>
+                    <button class="export-btn" id="export-pdf">
+                        <span class="export-icon">📄</span> Export PDF
+                    </button>
+                    <button class="export-btn" id="share-result">
+                        <span class="export-icon">🔗</span> Share
+                    </button>
+                </div>
+            </div>
+            
+            <div class="history-section">
+                <h3>Review History <button class="clear-history" id="clear-history">Clear History</button></h3>
+                <div class="history-items" id="history-items">
+                    <!-- History items will be added here -->
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Powered by DistilBERT | Created with Flask and Hugging Face Transformers</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
