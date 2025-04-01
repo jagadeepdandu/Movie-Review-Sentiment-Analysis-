@@ -18,15 +18,17 @@ def load_model():
     if not model_loaded:
         try:
             print("Loading model from Hugging Face")
-            # Load with CPU-only settings
+            # Use the public distilbert-base-uncased-finetuned-sst-2-english model instead
+            # This is a sentiment analysis model that's publicly available
+            model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+            
             tokenizer = DistilBertTokenizer.from_pretrained(
-                "jagadeepdandu/distilbert-imdb-sentiment",
+                model_name,
                 local_files_only=False
             )
             
-            # Use CPU-only configuration with minimal memory
             model = DistilBertForSequenceClassification.from_pretrained(
-                "jagadeepdandu/distilbert-imdb-sentiment",
+                model_name,
                 local_files_only=False,
                 torchscript=True,  # Optimize with TorchScript
                 low_cpu_mem_usage=True  # Use lower memory
