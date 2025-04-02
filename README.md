@@ -69,9 +69,8 @@ This web application analyzes movie reviews to determine whether the sentiment i
 
 ## Deployment
 
-This application can be deployed to cloud platforms such as:
+This application is deployed and accessible at [https://movie-review-sentiment-analysis-2ajl.onrender.com/](https://movie-review-sentiment-analysis-2ajl.onrender.com/).
 
-- Render
 
 ## License
 
